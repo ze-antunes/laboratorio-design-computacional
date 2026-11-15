@@ -13,9 +13,10 @@ export function stepFlight(flight, input, frameDelta, destination = null) {
     recoverFromCeiling(flight, dt);
     return flight;
   }
-  const turn = Number(!!input.right) - Number(!!input.left);
+  const turn = input.rollAxis ?? Number(!!input.right) - Number(!!input.left);
   const rudder = Number(!!input.rudderRight) - Number(!!input.rudderLeft);
-  const pitchInput = Number(!!input.backward) - Number(!!input.forward);
+  const pitchInput =
+    input.pitchAxis ?? Number(!!input.backward) - Number(!!input.forward);
   flight.speed = clamp(
     flight.speed +
       (Number(!!input.accelerate) - Number(!!input.decelerate)) * dt * 1.5,
@@ -55,7 +56,20 @@ export function stepFlight(flight, input, frameDelta, destination = null) {
     B.maxY,
   );
   if (flight.y >= B.maxY && flight.pitch > 0) {
-    flight.maneuver = { phase: "loop", elapsed: 0, entryPitch: flight.pitch, entryBank: flight.bank, entryHeading: flight.heading, exitPitch: Math.asin(Math.min(Math.sin(0.45), 2 * (B.maxY - RECOVERY_ALTITUDE) / (RECOVERY_DURATION * flight.speed))) };
+    flight.maneuver = {
+      phase: "loop",
+      elapsed: 0,
+      entryPitch: flight.pitch,
+      entryBank: flight.bank,
+      entryHeading: flight.heading,
+      exitPitch: Math.asin(
+        Math.min(
+          Math.sin(0.45),
+          (2 * (B.maxY - RECOVERY_ALTITUDE)) /
+            (RECOVERY_DURATION * flight.speed),
+        ),
+      ),
+    };
   }
   flight.x = wrapCoordinate(flight.x, B.minX, B.maxX);
   flight.z = wrapCoordinate(flight.z, B.minZ, B.maxZ);
@@ -95,12 +109,19 @@ function recoverFromCeiling(f, dt) {
     const h00 = 2 * t ** 3 - 3 * t ** 2 + 1;
     const h10 = t ** 3 - 2 * t ** 2 + t;
     const h01 = -2 * t ** 3 + 3 * t ** 2;
-    f.y = h00 * B.maxY + h10 * duration * m.entryVelocity + h01 * RECOVERY_ALTITUDE;
-    const velocity = ((6 * t * t - 6 * t) * B.maxY +
-      (3 * t * t - 4 * t + 1) * duration * m.entryVelocity +
-      (-6 * t * t + 6 * t) * RECOVERY_ALTITUDE) / duration;
+    f.y =
+      h00 * B.maxY + h10 * duration * m.entryVelocity + h01 * RECOVERY_ALTITUDE;
+    const velocity =
+      ((6 * t * t - 6 * t) * B.maxY +
+        (3 * t * t - 4 * t + 1) * duration * m.entryVelocity +
+        (-6 * t * t + 6 * t) * RECOVERY_ALTITUDE) /
+      duration;
     f.pitch = Math.asin(clamp(velocity / f.speed, -0.95, 0));
-    if (t === 1) { f.y = RECOVERY_ALTITUDE; f.pitch = 0; f.maneuver = null; }
+    if (t === 1) {
+      f.y = RECOVERY_ALTITUDE;
+      f.pitch = 0;
+      f.maneuver = null;
+    }
   }
   const horizontal = f.speed * Math.cos(f.pitch) * dt;
   f.x = wrapCoordinate(f.x - Math.sin(f.heading) * horizontal, B.minX, B.maxX);

@@ -350,161 +350,167 @@ function ReadingDrawer({ battles, visible, cluster }) {
           </button>
         ))}
       </nav>
-      {tab !== "coverage" && selected && (
-        <div className="reading-navigation">
-          <label>
-            Campanha / ano
-            <select
-              value={group?.id || ""}
-              onChange={(e) => {
-                const g = groups.find((g) => g.id === e.target.value);
-                if (g) state.select(g.events[0].id);
-              }}
-            >
-              {groups.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name} · {g.year} ({g.events.length})
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Confronto em leitura
-            <select
-              value={selected.id}
-              onChange={(e) => state.select(e.target.value)}
-            >
-              {group?.events.map((b, i) => (
-                <option key={b.id} value={b.id}>
-                  {i + 1}. {b.name} · {formatDate(b)}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      )}
-      <div className="reading-body">
-        {selected &&
-          tab !== "coverage" &&
-          !visible.some((b) => b.id === selected.id) && (
-            <p className="reading-note">
-              Este confronto está fora dos filtros atuais do mapa.{" "}
-              <button
-                onClick={() =>
-                  state.setFilter({ year: "all", theatre: "all", query: "" })
-                }
+      <div className="reading-scroll">
+        {tab !== "coverage" && selected && (
+          <div className="reading-navigation">
+            <label>
+              Campanha / ano
+              <select
+                value={group?.id || ""}
+                onChange={(e) => {
+                  const g = groups.find((g) => g.id === e.target.value);
+                  if (g) state.select(g.events[0].id);
+                }}
               >
-                Mostrar no mapa
-              </button>
-            </p>
-          )}
-
-        {suggestion && tab === "campaign" && group?.events.length < 2 && (
-          <div className="reading-suggestion">
-            <p>
-              Para começar uma leitura comparativa, sugerimos dois confrontos de{" "}
-              {suggestion.group.name} · {suggestion.group.year}, com efetivos e
-              baixas conhecidos nos dois lados.
-            </p>
-            <button onClick={applySuggestion}>Abrir comparação sugerida</button>
+                {groups.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name} · {g.year} ({g.events.length})
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Confronto em leitura
+              <select
+                value={selected.id}
+                onChange={(e) => state.select(e.target.value)}
+              >
+                {group?.events.map((b, i) => (
+                  <option key={b.id} value={b.id}>
+                    {i + 1}. {b.name} · {formatDate(b)}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
         )}
+        <div className="reading-body">
+          {selected &&
+            tab !== "coverage" &&
+            !visible.some((b) => b.id === selected.id) && (
+              <p className="reading-note">
+                Este confronto está fora dos filtros atuais do mapa.{" "}
+                <button
+                  onClick={() =>
+                    state.setFilter({ year: "all", theatre: "all", query: "" })
+                  }
+                >
+                  Mostrar no mapa
+                </button>
+              </p>
+            )}
 
-        {!selected && tab !== "coverage" && (
-          <p className="reading-empty">
-            O arquivo ainda não tem eventos disponíveis.
-          </p>
-        )}
-        {tab === "event" && selected && <EventReading battle={selected} />}
-        {tab === "campaign" && group && (
-          <section className="campaign-reading">
-            <p className="reading-kicker">O MESMO CONTEXTO, VÁRIOS MOMENTOS</p>
-            <h3>
-              {group.name} · {group.year}
-            </h3>
-            <p>
-              {group.events.length} registos, de {formatDate(group.events[0])} a{" "}
-              {formatDate(group.events.at(-1))}. Seleciona um confronto para o
-              consultar ou fixa-o como segundo termo da comparação.
-            </p>
-            <ol className="campaign-sequence">
-              {group.events.map((battle, i) => (
-                <li
-                  key={battle.id}
-                  className={battle.id === selectedId ? "selected" : ""}
-                >
-                  <span className="sequence-number">{i + 1}</span>
-                  <div>
-                    <small>{formatDate(battle)}</small>
-                    <h4>{battle.name}</h4>
-                    <p>
-                      {battle.attacker} / {battle.defender}
-                    </p>
-                    <div className="sequence-actions">
-                      <button
-                        onClick={() => {
-                          state.select(battle.id);
-                          state.setReadingTab("event");
-                        }}
-                      >
-                        Ler confronto
-                      </button>
-                      <button
-                        disabled={battle.id === selectedId}
-                        onClick={() => {
-                          state.setComparison(battle.id);
-                          state.setReadingTab("compare");
-                        }}
-                      >
-                        Comparar com A
-                      </button>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ol>
-            <p className="reading-note">
-              Os pontos mantêm as coordenadas do CSV. A ordem temporal não
-              representa uma rota de avanço das tropas.
-            </p>
-          </section>
-        )}
-        {tab === "compare" && selected && (
-          <>
-            <div className="comparison-settings">
-              <label>
-                Confronto B
-                <select
-                  value={second?.id || ""}
-                  disabled={!candidates.length}
-                  onChange={(e) => state.setComparison(e.target.value)}
-                >
-                  {!candidates.length && (
-                    <option value="">Sem outro registo neste grupo</option>
-                  )}
-                  {candidates.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name} · {formatDate(b)}
-                      {allCandidates ? ` · ${b.campaign}` : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="checkbox-setting">
-                <input
-                  type="checkbox"
-                  checked={allCandidates}
-                  onChange={(e) => setAllCandidates(e.target.checked)}
-                />{" "}
-                Permitir comparação com toda a amostra
-              </label>
+          {suggestion && tab === "campaign" && group?.events.length < 2 && (
+            <div className="reading-suggestion">
+              <p>
+                Para começar uma leitura comparativa, sugerimos dois confrontos
+                de {suggestion.group.name} · {suggestion.group.year}, com
+                efetivos e baixas conhecidos nos dois lados.
+              </p>
+              <button onClick={applySuggestion}>
+                Abrir comparação sugerida
+              </button>
             </div>
-            <Comparison first={selected} second={second} />
-          </>
-        )}
-        {tab === "coverage" && (
-          <CoverageReading battles={battles} visible={visible} />
-        )}
+          )}
+
+          {!selected && tab !== "coverage" && (
+            <p className="reading-empty">
+              O arquivo ainda não tem eventos disponíveis.
+            </p>
+          )}
+          {tab === "event" && selected && <EventReading battle={selected} />}
+          {tab === "campaign" && group && (
+            <section className="campaign-reading">
+              <p className="reading-kicker">
+                O MESMO CONTEXTO, VÁRIOS MOMENTOS
+              </p>
+              <h3>
+                {group.name} · {group.year}
+              </h3>
+              <p>
+                {group.events.length} registos, de {formatDate(group.events[0])}{" "}
+                a {formatDate(group.events.at(-1))}. Seleciona um confronto para
+                o consultar ou fixa-o como segundo termo da comparação.
+              </p>
+              <ol className="campaign-sequence">
+                {group.events.map((battle, i) => (
+                  <li
+                    key={battle.id}
+                    className={battle.id === selectedId ? "selected" : ""}
+                  >
+                    <span className="sequence-number">{i + 1}</span>
+                    <div>
+                      <small>{formatDate(battle)}</small>
+                      <h4>{battle.name}</h4>
+                      <p>
+                        {battle.attacker} / {battle.defender}
+                      </p>
+                      <div className="sequence-actions">
+                        <button
+                          onClick={() => {
+                            state.select(battle.id);
+                            state.setReadingTab("event");
+                          }}
+                        >
+                          Ler confronto
+                        </button>
+                        <button
+                          disabled={battle.id === selectedId}
+                          onClick={() => {
+                            state.setComparison(battle.id);
+                            state.setReadingTab("compare");
+                          }}
+                        >
+                          Comparar com A
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+              <p className="reading-note">
+                Os pontos mantêm as coordenadas do CSV. A ordem temporal não
+                representa uma rota de avanço das tropas.
+              </p>
+            </section>
+          )}
+          {tab === "compare" && selected && (
+            <>
+              <div className="comparison-settings">
+                <label>
+                  Confronto B
+                  <select
+                    value={second?.id || ""}
+                    disabled={!candidates.length}
+                    onChange={(e) => state.setComparison(e.target.value)}
+                  >
+                    {!candidates.length && (
+                      <option value="">Sem outro registo neste grupo</option>
+                    )}
+                    {candidates.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name} · {formatDate(b)}
+                        {allCandidates ? ` · ${b.campaign}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="checkbox-setting">
+                  <input
+                    type="checkbox"
+                    checked={allCandidates}
+                    onChange={(e) => setAllCandidates(e.target.checked)}
+                  />{" "}
+                  Permitir comparação com toda a amostra
+                </label>
+              </div>
+              <Comparison first={selected} second={second} />
+            </>
+          )}
+          {tab === "coverage" && (
+            <CoverageReading battles={battles} visible={visible} />
+          )}
+        </div>
       </div>
       <footer className="reading-footer">
         <span>O voo fica pausado durante a leitura.</span>

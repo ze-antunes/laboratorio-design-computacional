@@ -19,17 +19,27 @@ export default function CountryPicking() {
     const state = useExplorer.getState();
     if (!inside.current || state.drawer) return null;
     const surfaces = [];
-    scene.traverse(o => { if (o.isMesh && o.visible && o.userData.mapSurface) surfaces.push(o); });
+    scene.traverse((o) => {
+      if (o.isMesh && o.visible && o.userData.mapSurface) surfaces.push(o);
+    });
     ray.setFromCamera(pointer.current, camera);
     const hit = visibleLandHit(ray, surfaces);
     if (!hit) return null;
     let { x, z } = hit.point;
     if (state.cameraMode === "flight") {
-      if (Math.hypot(x - state.telemetry.x, z - state.telemetry.z) > state.viewDistance) return null;
+      if (
+        Math.hypot(x - state.telemetry.x, z - state.telemetry.z) >
+        state.viewDistance
+      )
+        return null;
       x = wrapCoordinate(x, B.minX, B.maxX);
       z = wrapCoordinate(z, B.minZ, B.maxZ);
     }
-    return world.features.find(f => countryContainsMapPoint(f, x, z))?.id?.toString() ?? null;
+    return (
+      world.features
+        .find((f) => countryContainsMapPoint(f, x, z))
+        ?.id?.toString() ?? null
+    );
   };
   const elapsed = useRef(0);
   useFrame((_, dt) => {
@@ -42,30 +52,78 @@ export default function CountryPicking() {
   });
   useEffect(() => {
     const canvas = gl.domElement;
-    const move = e => {
+    const move = (e) => {
       const rect = canvas.getBoundingClientRect();
-      pointer.current.set((e.clientX - rect.left) / rect.width * 2 - 1, -(e.clientY - rect.top) / rect.height * 2 + 1);
+      pointer.current.set(
+        ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        (-(e.clientY - rect.top) / rect.height) * 2 + 1,
+      );
       inside.current = true;
     };
-    const leave = () => { inside.current = false; down.current = null; useExplorer.getState().hoverCountry(null); };
-    const start = e => { move(e); down.current = [e.clientX, e.clientY]; };
-    const end = e => {
+    const leave = () => {
+      inside.current = false;
+      down.current = null;
+      contacts.clear();
+      multiple = false;
+      useExplorer.getState().hoverCountry(null);
+    };
+    const contacts = new Set();
+    let multiple = false;
+    const start = (e) => {
+      contacts.add(e.pointerId);
+      if (contacts.size > 1) {
+        multiple = true;
+        down.current = null;
+        return;
+      }
+      multiple = false;
       move(e);
-      if (!down.current || Math.hypot(e.clientX - down.current[0], e.clientY - down.current[1]) > 5) return;
+      down.current = [e.clientX, e.clientY, e.pointerId];
+    };
+    const cancel = (e) => {
+      contacts.delete(e.pointerId);
+      down.current = null;
+      inside.current = false;
+      useExplorer.getState().hoverCountry(null);
+    };
+    const end = (e) => {
+      contacts.delete(e.pointerId);
+      move(e);
+      if (
+        multiple ||
+        !down.current ||
+        down.current[2] !== e.pointerId ||
+        Math.hypot(e.clientX - down.current[0], e.clientY - down.current[1]) > 8
+      ) {
+        down.current = null;
+        return;
+      }
       down.current = null;
       // Event/cluster handlers take precedence over country information.
       const id = pick();
       const hits = ray.intersectObjects(scene.children, true);
-      if (hits.some(h => h.object.name.includes("explosion") || h.object.name.includes("event-point") || h.object.name === "expanded-cluster-points")) return;
+      if (
+        hits.some(
+          (h) =>
+            h.object.name.includes("explosion") ||
+            h.object.name.includes("event-point") ||
+            h.object.name === "expanded-cluster-points",
+        )
+      )
+        return;
       if (id) useExplorer.getState().openCountry(id);
     };
     canvas.addEventListener("pointermove", move);
     canvas.addEventListener("pointerleave", leave);
     canvas.addEventListener("pointerdown", start);
     canvas.addEventListener("pointerup", end);
+    canvas.addEventListener("pointercancel", cancel);
     return () => {
-      canvas.removeEventListener("pointermove", move); canvas.removeEventListener("pointerleave", leave);
-      canvas.removeEventListener("pointerdown", start); canvas.removeEventListener("pointerup", end);
+      canvas.removeEventListener("pointermove", move);
+      canvas.removeEventListener("pointerleave", leave);
+      canvas.removeEventListener("pointerdown", start);
+      canvas.removeEventListener("pointerup", end);
+      canvas.removeEventListener("pointercancel", cancel);
     };
   }, [scene, camera, gl]);
   return null;

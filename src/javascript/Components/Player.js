@@ -52,10 +52,11 @@ function Aircraft({ aircraft }) {
     useExplorer.getState().setModelStatus("ready");
   }, [aircraft]);
   useFrame((_, dt) => {
-    const state=useExplorer.getState();
-    if(!state.paused && state.cameraMode === "flight") spinPropellers(object.rotors,dt,state.telemetry.speed);
+    const state = useExplorer.getState();
+    if (!state.paused && state.cameraMode === "flight")
+      spinPropellers(object.rotors, dt, state.telemetry.speed);
   });
-  useEffect(()=>()=>object.dispose(),[object]);
+  useEffect(() => () => object.dispose(), [object]);
   return <primitive object={object.group} dispose={null} />;
 }
 export default function Player() {
@@ -141,7 +142,19 @@ export default function Player() {
       "decelerate",
     ])
       input[key] = keys[key] || current.pressed[key];
+    input.rollAxis = current.drawer
+      ? 0
+      : input.left || input.right
+        ? undefined
+        : current.touchAxes.roll;
+    input.pitchAxis = current.drawer
+      ? 0
+      : input.forward || input.backward
+        ? undefined
+        : current.touchAxes.pitch;
     const manual =
+      Math.abs(input.rollAxis || 0) > 0 ||
+      Math.abs(input.pitchAxis || 0) > 0 ||
       input.forward ||
       input.backward ||
       input.left ||
@@ -181,7 +194,9 @@ export default function Player() {
     ) {
       dwell.current += dt;
       const progress = Math.min(1, dwell.current / current.readingSeconds);
-      if (Math.floor(progress * 100) !== Math.floor(current.eventProgress * 100))
+      if (
+        Math.floor(progress * 100) !== Math.floor(current.eventProgress * 100)
+      )
         current.setEventProgress(progress);
       if (dwell.current >= current.readingSeconds) current.advanceTour();
     }
@@ -267,14 +282,19 @@ export default function Player() {
   });
   return (
     <>
-    <group ref={plane} name="player-aircraft">
-      <ModelBoundary key={aircraft.id}>
-        <Suspense fallback={null}>
-          <Aircraft aircraft={aircraft} />
-        </Suspense>
-      </ModelBoundary>
-    </group>
-    <SmokeTrail plane={plane} flight={flight} aircraftId={aircraftId} reset={reset} />
+      <group ref={plane} name="player-aircraft">
+        <ModelBoundary key={aircraft.id}>
+          <Suspense fallback={null}>
+            <Aircraft aircraft={aircraft} />
+          </Suspense>
+        </ModelBoundary>
+      </group>
+      <SmokeTrail
+        plane={plane}
+        flight={flight}
+        aircraftId={aircraftId}
+        reset={reset}
+      />
     </>
   );
 }

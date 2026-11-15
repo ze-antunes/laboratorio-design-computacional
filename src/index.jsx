@@ -1,4 +1,5 @@
 import "./style/style.css";
+import "./style/responsive.css";
 import ReactDOM from "react-dom/client";
 import { Canvas } from "@react-three/fiber";
 import Experience from "./javascript/Experience.jsx";

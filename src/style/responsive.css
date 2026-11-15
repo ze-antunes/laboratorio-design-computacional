@@ -1,0 +1,1108 @@
+/* Responsive exploration: measured chrome, reachable controls and independent reading scroll. */
+html,
+body,
+#root {
+  height: var(--app-height, 100dvh);
+}
+#root {
+  position: relative;
+}
+canvas {
+  touch-action: none;
+}
+.flight-interface {
+  --bottom-inset: max(12px, env(safe-area-inset-bottom));
+  --controls-h: 0px;
+}
+.project-header {
+  height: auto;
+  min-height: 112px;
+  grid-template-columns: minmax(180px, 0.9fr) minmax(180px, 1.3fr) minmax(
+      300px,
+      1fr
+    );
+  gap: 18px;
+  padding-top: max(14px, env(safe-area-inset-top));
+  padding-left: max(var(--edge), env(safe-area-inset-left));
+  padding-right: max(var(--edge), env(safe-area-inset-right));
+}
+.project-header > *,
+.header-context,
+.header-functions,
+.chronology-top > div,
+.reading-navigation > label {
+  min-width: 0;
+}
+.header-functions {
+  min-width: 0;
+}
+.header-functions nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.header-context > strong,
+.header-context > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.mobile-menu-toggle,
+.mobile-menu-backdrop,
+.dock-toggle,
+.timeline-touch-picker,
+.touch-flight-ui,
+.compass-instruments {
+  display: none;
+}
+.exploration-dock {
+  bottom: var(--bottom-inset);
+}
+.current-year {
+  bottom: calc(var(--dock-h) + var(--bottom-inset) + 20px);
+}
+.flight-interface .drawer,
+.flight-interface .reading-drawer {
+  height: var(--app-height, 100dvh);
+  max-height: var(--app-height, 100dvh);
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.drawer-heading,
+.reading-heading {
+  flex-shrink: 0;
+  margin: 0;
+  padding: max(18px, env(safe-area-inset-top)) 20px 14px;
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--panel-line);
+}
+.drawer-heading > button,
+.reading-heading > button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.drawer-body,
+.reading-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+.drawer-body {
+  padding: 4px 20px max(24px, env(safe-area-inset-bottom));
+}
+.reading-drawer .reading-body {
+  overflow: visible;
+  flex: none;
+}
+.reading-drawer .reading-navigation {
+  flex-shrink: 0;
+}
+.reading-drawer .reading-footer {
+  flex-shrink: 0;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+.drawer-body,
+.reading-body,
+.reading-footer,
+.comparison-row > *,
+.reading-sides > *,
+.comparison-head > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.reading-navigation select,
+.drawer select,
+.comparison-settings select {
+  max-width: 100%;
+  text-overflow: ellipsis;
+}
+.reading-tabs {
+  flex-shrink: 0;
+}
+.flight-interface button,
+.flight-interface a,
+.flight-interface select,
+.flight-interface summary {
+  touch-action: manipulation;
+}
+.flight-interface button:focus-visible,
+.flight-interface a:focus-visible {
+  outline-offset: -3px;
+}
+@media (max-width: 1100px) and (min-width: 701px) {
+  .project-header {
+    grid-template-columns: minmax(180px, 1fr) minmax(310px, 1.4fr);
+    grid-template-areas: "brand functions" "context context";
+    gap: 10px 20px;
+  }
+  .project-brand {
+    grid-area: brand;
+  }
+  .header-functions {
+    grid-area: functions;
+  }
+  .header-context {
+    grid-area: context;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "near actions" "title actions";
+  }
+  .header-nearby {
+    grid-area: near;
+  }
+  .header-context > strong {
+    grid-area: title;
+  }
+  .header-context > span {
+    display: none;
+  }
+  .header-context-actions {
+    grid-area: actions;
+  }
+}
+@media (max-width: 700px) {
+  .flight-interface {
+    --edge: max(10px, env(safe-area-inset-left), env(safe-area-inset-right));
+    --locator-width: 88px;
+  }
+  .project-header {
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "brand menu" "context context" "functions functions";
+    gap: 6px 10px;
+    padding: max(9px, env(safe-area-inset-top)) var(--edge) 8px;
+  }
+  .project-brand {
+    grid-area: brand;
+  }
+  .project-brand p,
+  .project-brand small {
+    display: none;
+  }
+  .project-brand h1 {
+    margin: 0;
+    font-size: 17px;
+    line-height: 1.05;
+  }
+  .mobile-menu-toggle {
+    display: block;
+    grid-area: menu;
+    min-height: 44px;
+    min-width: 84px;
+    font-size: 12px;
+    padding: 8px;
+  }
+  .header-context {
+    grid-area: context;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "near actions" "title actions";
+    padding-left: 8px;
+    gap: 2px 8px;
+  }
+  .header-nearby {
+    grid-area: near;
+    font-size: 8px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .header-context > strong {
+    grid-area: title;
+    font-size: 14px;
+    margin: 0;
+  }
+  .header-context > span {
+    display: none;
+  }
+  .header-context-actions {
+    grid-area: actions;
+    display: flex;
+    gap: 5px;
+  }
+  .header-context-actions button {
+    min-height: 44px;
+    padding: 6px;
+    font-size: 11px;
+  }
+  .header-functions {
+    grid-area: functions;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .header-functions nav {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: var(--edge);
+    right: var(--edge);
+    width: auto;
+    background: #101010;
+    border: 1px solid #666;
+    padding: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    box-shadow: 0 12px 30px #0009;
+  }
+  .is-menu-open .header-functions nav {
+    display: grid;
+  }
+  .header-functions nav button {
+    min-height: 48px;
+    font-size: 13px;
+    padding: 8px;
+  }
+  .mobile-menu-backdrop {
+    display: block;
+    position: absolute;
+    inset: var(--header-h) 0 0;
+    width: 100%;
+    border: 0;
+    padding: 0;
+    background: #0009;
+    z-index: 18;
+  }
+  .flight-modes {
+    flex: 1;
+    gap: 5px;
+    margin: 0;
+  }
+  .flight-modes button {
+    min-height: 44px;
+    font-size: 11px;
+    padding: 6px 8px;
+    white-space: nowrap;
+  }
+  .header-instruments {
+    width: auto;
+    flex: none;
+    margin: 0;
+  }
+  .header-instruments > span {
+    display: none;
+  }
+  .header-instruments button {
+    min-height: 44px;
+    padding: 6px 8px;
+    font-size: 11px;
+    margin: 0;
+  }
+  .flight-compass {
+    width: 174px;
+    padding: 7px 9px;
+    top: calc(var(--header-h) + 8px);
+  }
+  .compass-heading strong {
+    font-size: 20px;
+  }
+  .compass-instruments {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    color: #aaa;
+    font: 9px monospace;
+    margin: 3px 0;
+  }
+  .compass-caption {
+    font-size: 7px;
+  }
+  .country-hover {
+    top: calc(var(--header-h) + 115px);
+  }
+  .flight-interface .exploration-dock {
+    grid-template-columns: var(--locator-width) minmax(0, 1fr);
+    gap: 8px;
+    align-items: stretch;
+  }
+  .dock-toggle {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 5px;
+    min-width: 0;
+    min-height: 64px;
+    padding: 10px 12px;
+    background: #0d0d0de6;
+  }
+  .dock-toggle > span {
+    font: 9px monospace;
+    color: #aaa;
+  }
+  .dock-toggle strong {
+    font-size: 12px;
+    font-weight: 400;
+  }
+  .locator-toggle {
+    min-height: 64px;
+    padding: 6px;
+  }
+  .locator-caption {
+    font-size: 7px;
+    line-height: 1.2;
+  }
+  .locator-caption b,
+  .locator-hint {
+    display: none;
+  }
+  .locator-map {
+    height: 36px;
+    width: 100%;
+  }
+  .chronology {
+    display: none;
+  }
+  .is-dock-expanded .chronology {
+    display: block;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    height: auto;
+    max-height: calc(
+      var(--app-height, 100dvh) - var(--header-h) - var(--dock-h) - 32px
+    );
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 12px;
+    background: #111;
+    border: 1px solid #666;
+    box-shadow: 0 -10px 40px #0008;
+  }
+  .chronology-top {
+    display: block;
+  }
+  .chronology-top > div:first-child {
+    display: block;
+  }
+  .chronology-date {
+    font-size: 17px;
+  }
+  .chronology-event {
+    display: block;
+    font-size: 11px;
+    max-width: 100%;
+    margin-top: 3px;
+  }
+  .chronology-actions {
+    display: flex;
+    margin: 8px 0;
+    gap: 6px;
+  }
+  .chronology-actions button {
+    min-height: 44px;
+    font-size: 11px;
+    padding: 7px;
+    flex: 1;
+  }
+  .chronology-chart {
+    height: 58px;
+  }
+  .chronology-bottom {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 5px;
+    padding-top: 4px;
+  }
+  .chronology-bottom button {
+    min-height: 44px;
+    min-width: 44px;
+    flex-shrink: 0;
+    font-size: 12px;
+    padding: 7px;
+  }
+  .chronology-bottom button:first-child {
+    font-size: 11px;
+  }
+  .chronology-bottom span {
+    display: none;
+  }
+  .timeline-touch-picker {
+    display: block;
+    font-size: 11px;
+    color: #bbb;
+  }
+  .timeline-touch-picker select {
+    min-height: 44px;
+    margin-top: 4px;
+  }
+  .current-year {
+    width: 100px;
+    bottom: calc(
+      var(--dock-h) + var(--bottom-inset) + var(--controls-h) + 24px
+    );
+  }
+  .current-year > span {
+    font-size: 7px;
+  }
+  .flight-interface .drawer,
+  .flight-interface .reading-drawer {
+    width: 100%;
+    max-width: 100%;
+    border-left: 0;
+  }
+  .drawer-heading,
+  .reading-heading {
+    padding: max(12px, env(safe-area-inset-top)) 16px 10px;
+  }
+  .drawer-heading h2,
+  .reading-heading h2 {
+    font-size: 23px;
+  }
+  .drawer-body,
+  .reading-drawer .reading-body {
+    padding: 8px 16px 24px;
+  }
+  .drawer-body p,
+  .reading-body p,
+  .reading-body li {
+    font-size: 14px;
+    line-height: 1.65;
+  }
+  .drawer-body label,
+  .reading-navigation label,
+  .comparison-settings label {
+    font-size: 12px;
+  }
+  .drawer input,
+  .drawer select,
+  .reading-drawer input,
+  .reading-drawer select,
+  .timeline-touch-picker select {
+    font-size: 16px;
+    min-height: 44px;
+  }
+  .archive-list button {
+    min-height: 64px;
+  }
+  .archive-list strong {
+    font-size: 14px;
+  }
+  .archive-list span {
+    font-size: 12px;
+  }
+  .reading-tabs {
+    display: flex;
+    padding: 0 10px;
+    overflow-x: auto;
+  }
+  .reading-tabs button {
+    min-height: 44px;
+    font-size: 12px;
+    flex: 1;
+    padding: 8px;
+    white-space: nowrap;
+  }
+  .reading-navigation {
+    padding: 12px 16px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .reading-drawer .reading-footer {
+    padding: 10px 16px max(10px, env(safe-area-inset-bottom));
+  }
+  .reading-footer > div {
+    display: flex;
+    gap: 8px;
+  }
+  .reading-footer button {
+    min-height: 44px;
+    padding: 8px;
+    font-size: 12px;
+    flex: 1;
+  }
+  .reading-footer > span {
+    font-size: 11px;
+  }
+  .reading-sides,
+  .paired-measure > div {
+    gap: 12px;
+  }
+  .comparison-row {
+    gap: 8px;
+    grid-template-columns: minmax(0, 1.1fr) repeat(2, minmax(0, 1fr));
+  }
+  .comparison-row > span {
+    font-size: 11px;
+  }
+  .comparison-row .value-bar > span {
+    font-size: 16px;
+  }
+  .sequence-actions button,
+  .reading-body button,
+  .drawer-body > button,
+  summary {
+    min-height: 44px;
+  }
+}
+@media (any-pointer: coarse) {
+  .flight-interface button,
+  .flight-interface summary {
+    min-height: 44px;
+  }
+  .flight-interface input,
+  .flight-interface select {
+    min-height: 44px;
+    font-size: 16px;
+  }
+  .touch-flight-ui {
+    display: contents;
+  }
+  .touch-controls-toggle {
+    position: absolute;
+    top: calc(var(--header-h) + 8px);
+    right: var(--edge);
+    z-index: 13;
+    max-width: 126px;
+    min-height: 44px;
+    padding: 8px;
+    font-size: 11px;
+    background: #0b0b0be6;
+  }
+  .touch-flight-controls {
+    position: absolute;
+    left: var(--edge);
+    right: var(--edge);
+    bottom: calc(var(--dock-h) + var(--bottom-inset) + 14px);
+    height: 112px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    z-index: 14;
+    pointer-events: none;
+  }
+  .flight-interface:has(.touch-flight-controls) {
+    --controls-h: 124px;
+  }
+  .flight-stick {
+    position: relative;
+    width: 112px;
+    height: 112px;
+    border: 1px solid #777;
+    border-radius: 50%;
+    background: #111b;
+    touch-action: none;
+    pointer-events: auto;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .flight-stick::before,
+  .flight-stick::after {
+    content: "";
+    position: absolute;
+    background: #ffffff20;
+  }
+  .flight-stick::before {
+    left: 50%;
+    top: 18px;
+    bottom: 18px;
+    width: 1px;
+  }
+  .flight-stick::after {
+    top: 50%;
+    left: 18px;
+    right: 18px;
+    height: 1px;
+  }
+  .stick-thumb {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 38px;
+    height: 38px;
+    background: #777;
+    border: 1px solid #eee;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .stick-up,
+  .stick-down {
+    position: absolute;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font: 7px monospace;
+    color: #ccc;
+    pointer-events: none;
+  }
+  .stick-up {
+    top: 7px;
+  }
+  .stick-down {
+    bottom: 7px;
+  }
+  .touch-throttle {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .touch-throttle button {
+    width: 70px;
+    min-height: 50px;
+    padding: 3px;
+    font: 24px monospace;
+    background: #111d;
+    touch-action: none;
+    user-select: none;
+  }
+  .touch-throttle small {
+    display: block;
+    font: 7px monospace;
+    color: #bbb;
+  }
+  .touch-throttle button.is-held {
+    background: #7b0008;
+    border-color: #f00511;
+  }
+  .timeline-touch-picker {
+    display: block;
+  }
+  .timeline-touch-picker select {
+    min-height: 44px;
+  }
+  .flight-interface .chronology-bottom button {
+    min-width: 44px;
+  }
+  .country-hover {
+    display: none;
+  }
+}
+@media (max-height: 550px) and (min-width: 480px) {
+  .flight-interface {
+    --edge: max(10px, env(safe-area-inset-left), env(safe-area-inset-right));
+    --locator-width: 100px;
+  }
+  .project-header {
+    grid-template-columns: minmax(150px, 1fr) auto auto;
+    grid-template-areas: "brand functions menu";
+    gap: 8px;
+    min-height: 0;
+    padding: max(7px, env(safe-area-inset-top)) var(--edge) 7px;
+  }
+  .project-brand {
+    grid-area: brand;
+  }
+  .project-brand p,
+  .project-brand small,
+  .header-context {
+    display: none;
+  }
+  .project-brand h1 {
+    font-size: 16px;
+    margin: 0;
+  }
+  .mobile-menu-toggle {
+    display: block;
+    grid-area: menu;
+    min-height: 44px;
+    font-size: 11px;
+  }
+  .header-functions {
+    grid-area: functions;
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+  .header-functions nav {
+    display: none;
+    position: absolute;
+    top: calc(100% + 7px);
+    right: var(--edge);
+    left: auto;
+    width: min(360px, calc(100vw - 24px));
+    padding: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    background: #111;
+    border: 1px solid #666;
+  }
+  .is-menu-open .header-functions nav {
+    display: grid;
+  }
+  .header-functions nav button {
+    min-height: 44px;
+    font-size: 12px;
+  }
+  .mobile-menu-backdrop {
+    display: block;
+    position: absolute;
+    inset: var(--header-h) 0 0;
+    border: 0;
+    background: #0009;
+    z-index: 18;
+  }
+  .flight-modes,
+  .header-instruments {
+    width: auto;
+    margin: 0;
+  }
+  .flight-modes button,
+  .header-instruments button {
+    min-height: 44px;
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+  .header-instruments > span {
+    display: none;
+  }
+  .flight-compass {
+    width: 160px;
+    padding: 5px 8px;
+    top: calc(var(--header-h) + 8px);
+  }
+  .compass-heading strong {
+    font-size: 18px;
+  }
+  .compass-caption {
+    font-size: 7px;
+  }
+  .compass-instruments {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    font: 8px monospace;
+    color: #aaa;
+    margin: 2px 0;
+  }
+  .flight-interface .exploration-dock {
+    grid-template-columns: 100px minmax(0, 1fr);
+    gap: 8px;
+  }
+  .dock-toggle {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 4px;
+    min-height: 52px;
+    font-size: 12px;
+    background: #111d;
+  }
+  .dock-toggle > span {
+    font: 8px monospace;
+    color: #aaa;
+  }
+  .locator-toggle {
+    min-height: 52px;
+    padding: 5px;
+  }
+  .locator-map {
+    height: 28px;
+    width: 100%;
+  }
+  .locator-caption {
+    font-size: 7px;
+  }
+  .locator-caption b,
+  .locator-hint {
+    display: none;
+  }
+  .chronology {
+    display: none;
+  }
+  .is-dock-expanded .chronology {
+    display: block;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: #111;
+    border: 1px solid #666;
+    height: auto;
+    padding: 10px;
+    max-height: calc(
+      var(--app-height, 100dvh) - var(--header-h) - var(--dock-h) - 28px
+    );
+    overflow-y: auto;
+  }
+  .chronology-top {
+    display: flex;
+  }
+  .chronology-event {
+    max-width: 220px;
+  }
+  .chronology-actions button {
+    min-height: 44px;
+    font-size: 11px;
+  }
+  .chronology-bottom {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+  .chronology-bottom button {
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .chronology-chart {
+    height: 48px;
+  }
+  .timeline-touch-picker {
+    display: block;
+    font-size: 11px;
+  }
+  .timeline-touch-picker select {
+    margin-top: 3px;
+  }
+  .current-year {
+    display: none;
+  }
+  .touch-flight-controls {
+    height: 96px;
+    bottom: calc(var(--dock-h) + var(--bottom-inset) + 8px);
+  }
+  .flight-stick {
+    width: 96px;
+    height: 96px;
+  }
+  .touch-throttle {
+    flex-direction: row;
+  }
+  .touch-throttle button {
+    width: 54px;
+  }
+  .reading-navigation {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .reading-heading {
+    padding: 7px 16px;
+  }
+  .reading-heading .reading-kicker {
+    display: none;
+  }
+  .reading-heading h2 {
+    font-size: 21px;
+  }
+  .reading-footer > span {
+    display: none;
+  }
+  .reading-footer button {
+    min-height: 44px;
+  }
+  .reading-tabs button {
+    min-height: 44px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .event-progress > div {
+    transition: none;
+  }
+}
+/* Keep measured offsets separate from the dock's requested layout height. */
+.flight-interface {
+  --dock-size: 160px;
+}
+.exploration-dock {
+  height: var(--dock-size);
+}
+@media (max-width: 1100px) {
+  .flight-interface {
+    --dock-size: 64px;
+    --locator-width: 100px;
+  }
+  .flight-interface .exploration-dock {
+    grid-template-columns: var(--locator-width) minmax(0, 1fr);
+    gap: 8px;
+  }
+  .dock-toggle {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 5px;
+    min-width: 0;
+    min-height: 64px;
+    padding: 8px 12px;
+    background: #0d0d0de6;
+  }
+  .dock-toggle > span {
+    font: 9px monospace;
+    color: #aaa;
+  }
+  .dock-toggle strong {
+    font-size: 12px;
+    font-weight: 400;
+  }
+  .locator-toggle {
+    min-height: 64px;
+    padding: 6px;
+  }
+  .locator-map {
+    height: 36px;
+    width: 100%;
+  }
+  .locator-caption {
+    font-size: 7px;
+  }
+  .locator-caption b,
+  .locator-hint {
+    display: none;
+  }
+  .chronology {
+    display: none;
+  }
+  .is-dock-expanded .chronology {
+    display: block;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    height: auto;
+    max-height: calc(
+      var(--app-height, 100dvh) - var(--header-h) - var(--dock-h) - 32px
+    );
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 12px;
+    background: #111;
+    border: 1px solid #666;
+    box-shadow: 0 -10px 40px #0008;
+  }
+  .chronology-actions button,
+  .chronology-bottom button {
+    min-height: 44px;
+    font-size: 12px;
+  }
+  .chronology-bottom {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  .chronology-bottom button {
+    flex-shrink: 0;
+    min-width: 44px;
+  }
+  .timeline-touch-picker {
+    display: block;
+    font-size: 12px;
+  }
+  .timeline-touch-picker select {
+    min-height: 44px;
+  }
+}
+@media (any-pointer: coarse) and (min-width: 1101px) {
+  .flight-interface {
+    --dock-size: 232px;
+  }
+  .chronology {
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+  }
+}
+@media (max-height: 550px) and (min-width: 480px) {
+  .flight-interface {
+    --dock-size: 52px;
+  }
+  .dock-toggle,
+  .locator-toggle {
+    min-height: 52px;
+  }
+  .locator-map {
+    height: 28px;
+  }
+}
+/* Context actions stay on one line; the map always remains the left dock item. */
+.header-context-actions {
+  flex-direction: row;
+}
+@media (max-width: 1100px), (max-height: 550px) {
+  .locator-toggle {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .dock-toggle {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+@media (any-pointer: coarse) {
+  .current-year {
+    bottom: calc(
+      var(--dock-h) + var(--bottom-inset) + var(--controls-h) + 24px
+    );
+  }
+  .drawer-body p,
+  .reading-body p {
+    font-size: 14px;
+  }
+  .reading-footer button {
+    font-size: 12px;
+  }
+  .sequence-actions button,
+  .reading-body button {
+    min-height: 44px;
+    font-size: 12px;
+  }
+}
+@media (max-width: 359px) {
+  .header-context-actions {
+    gap: 3px;
+  }
+  .header-context-actions button {
+    font-size: 10px;
+    padding: 5px;
+  }
+  .flight-modes button,
+  .header-instruments button {
+    font-size: 10px;
+    padding: 5px 6px;
+  }
+}
+
+@media (max-height: 520px) and (max-width: 479px) {
+  .current-year {
+    display: none;
+  }
+}
+@media (max-height: 400px) and (min-width: 480px) {
+  .flight-compass {
+    padding: 4px 8px;
+  }
+  .compass-caption {
+    display: none;
+  }
+  .compass-heading strong {
+    font-size: 16px;
+  }
+  .flight-compass svg {
+    height: 22px;
+  }
+}
+@media (max-height: 600px) and (max-width: 479px) {
+  .flight-compass {
+    width: 146px;
+    padding: 5px 8px;
+  }
+  .compass-caption {
+    display: none;
+  }
+  .compass-heading {
+    gap: 8px;
+  }
+  .compass-heading strong {
+    font-size: 18px;
+  }
+  .flight-compass svg {
+    height: 22px;
+  }
+}
+@media (any-pointer: coarse) {
+  .drawer-heading,
+  .reading-heading,
+  .drawer-body,
+  .reading-navigation,
+  .reading-drawer .reading-body,
+  .reading-footer {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+}

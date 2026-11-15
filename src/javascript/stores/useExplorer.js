@@ -15,6 +15,7 @@ export const useExplorer = create((set, get) => ({
   aircraft: "allies_airplane_ww2",
   cameraMode: "flight",
   flightReset: 0,
+  touchAxes: { roll: 0, pitch: 0 },
   pressed: {},
   modelStatus: "loading",
   drawer: null,
@@ -85,6 +86,7 @@ export const useExplorer = create((set, get) => ({
         cameraMode: "flight",
         drawer: null,
         expandedClusterId: null,
+        touchAxes: { roll: 0, pitch: 0 },
         pressed: {},
       });
       return;
@@ -105,6 +107,7 @@ export const useExplorer = create((set, get) => ({
       cameraMode: "flight",
       drawer: null,
       expandedClusterId: null,
+      touchAxes: { roll: 0, pitch: 0 },
       pressed: {},
     });
   },
@@ -119,6 +122,7 @@ export const useExplorer = create((set, get) => ({
       expandedClusterId: null,
       drawer: "country",
       paused: true,
+      touchAxes: { roll: 0, pitch: 0 },
       pressed: {},
       playing: false,
       navigationMode: "free",
@@ -129,6 +133,7 @@ export const useExplorer = create((set, get) => ({
       expandedClusterId,
       drawer: "cluster",
       paused: true,
+      touchAxes: { roll: 0, pitch: 0 },
       pressed: {},
       playing: false,
       navigationMode: "free",
@@ -143,6 +148,7 @@ export const useExplorer = create((set, get) => ({
       readingTab,
       selectedId: state.selectedId ?? state.battles[0]?.id ?? null,
       paused: true,
+      touchAxes: { roll: 0, pitch: 0 },
       pressed: {},
       playing: false,
       navigationMode: "free",
@@ -172,13 +178,14 @@ export const useExplorer = create((set, get) => ({
   setProximity: (cluster) =>
     set((state) => ({
       nearbyId: cluster?.id ?? null,
-      selectedId: state.drawer || state.playing || state.destinationId
-        ? state.selectedId
-        : cluster
-          ? cluster.events.some((b) => b.id === state.selectedId)
-            ? state.selectedId
-            : cluster.events[0].id
-          : state.selectedId,
+      selectedId:
+        state.drawer || state.playing || state.destinationId
+          ? state.selectedId
+          : cluster
+            ? cluster.events.some((b) => b.id === state.selectedId)
+              ? state.selectedId
+              : cluster.events[0].id
+            : state.selectedId,
     })),
   togglePlay: () => {
     if (get().playing) {
@@ -232,22 +239,30 @@ export const useExplorer = create((set, get) => ({
       state.advanceTour();
       return;
     }
-    set({ paused: !state.paused, pressed: {} });
+    set({
+      paused: !state.paused,
+      pressed: {},
+      touchAxes: { roll: 0, pitch: 0 },
+    });
   },
   openDrawer: (drawer) =>
     set((state) => ({
       drawer: state.drawer === drawer ? null : drawer,
+      touchAxes: { roll: 0, pitch: 0 },
       pressed: {},
       ...(drawer ? { paused: true } : {}),
       ...(drawer === "event" ? { readingTab: "event" } : {}),
       ...(drawer === null ? { expandedClusterId: null } : {}),
     })),
+  setTouchAxes: (roll, pitch) => set({ touchAxes: { roll, pitch } }),
   press: (key, value) =>
     set((state) => ({ pressed: { ...state.pressed, [key]: value } })),
-  release: () => set({ pressed: {} }),
+  release: () => set({ pressed: {}, touchAxes: { roll: 0, pitch: 0 } }),
   resetFlight: () =>
     set((state) => ({
       flightReset: state.flightReset + 1,
+      pressed: {},
+      touchAxes: { roll: 0, pitch: 0 },
       navigationMode: "free",
       destinationId: null,
       playing: false,

@@ -117,3 +117,12 @@ The altitude ceiling is 15.0. Reaching it triggers a 4.5-second half backward lo
 A heading tape below the header shows the aircraft heading (north at 000°, east at 090°). A red diamond points towards the active destination, including the shortest direction across map seams.
 
 Aircraft effects: each model uses its original propeller geometry, extracted into local pivots without changing the source assets. The Henschel has two animated propellers and the low-poly bomber has four. A bounded 128-particle smoke trail fades over 3.2 seconds, follows maneuvers and wraps with the aircraft at world seams. Both effects freeze when the flight is paused.
+
+
+## Responsive exploration
+
+- Phones use a compact exploration menu and a collapsible timeline. The minimap stays on the left; a native event selector offers precise timeline selection by touch.
+- Touch devices provide a proportional thumbstick (left/right turn, up climb, down descend) and hold-to-change throttle buttons. Two simultaneous touches work independently. Releasing, cancelling, changing orientation, opening a drawer or leaving the page clears held inputs. Touch controls can be hidden and appear only in free flight.
+- Drawers keep their title, close action and reading footer reachable while the content scrolls independently. Phone drawers use the full width; landscape and tablet layouts preserve a portion of the 3D background. Focus stays within an open drawer and returns to a visible control after closing.
+- Header and dock offsets are measured rather than inferred from fixed heights. Dynamic viewport height, safe-area insets and 16px touch inputs accommodate browser chrome, screen rotation and the on-screen keyboard.
+- Keyboard flight shortcuts continue to work. The circular control is shown only on devices reporting touch input; it does not replace the desktop interface.

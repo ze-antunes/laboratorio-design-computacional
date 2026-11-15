@@ -5,6 +5,7 @@ export default function Timeline({ battles, visible, clusters }) {
   const selectedId = useExplorer((s) => s.selectedId),
     year = useExplorer((s) => s.year),
     playing = useExplorer((s) => s.playing);
+  const destinationId = useExplorer((s) => s.destinationId);
   const drawer = useExplorer((s) => s.drawer),
     tab = useExplorer((s) => s.readingTab),
     comparisonId = useExplorer((s) => s.comparisonId);
@@ -46,7 +47,11 @@ export default function Timeline({ battles, visible, clusters }) {
     activate(b);
   };
   return (
-    <footer className="chronology" aria-label="Cronologia interativa">
+    <footer
+      id="project-chronology"
+      className="chronology"
+      aria-label="Cronologia interativa"
+    >
       <div className="chronology-top">
         <div>
           <span className="chronology-date">
@@ -167,6 +172,30 @@ export default function Timeline({ battles, visible, clusters }) {
           </line>
         )}
       </svg>
+      <label className="timeline-touch-picker">
+        Evento na cronologia
+        <select
+          value={
+            visible.some((b) => b.id === destinationId)
+              ? destinationId
+              : index >= 0
+                ? selectedId
+                : ""
+          }
+          onChange={(e) =>
+            activate(visible.find((b) => b.id === e.target.value))
+          }
+        >
+          <option value="" disabled>
+            Escolher evento
+          </option>
+          {visible.map((b) => (
+            <option key={b.id} value={b.id}>
+              {formatDate(b)} · {b.name}
+            </option>
+          ))}
+        </select>
+      </label>
       <div className="chronology-bottom">
         <button
           className={year === "all" ? "active" : ""}

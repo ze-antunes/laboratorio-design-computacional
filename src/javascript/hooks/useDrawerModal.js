@@ -3,6 +3,14 @@ export default function useDrawerModal(drawer, close) {
   useEffect(() => {
     if (!drawer) return;
     const previous = document.activeElement;
+    const background = [
+      ...document.querySelectorAll(
+        ".project-header,.exploration-dock,.flight-compass,.current-year",
+      ),
+    ];
+    background.forEach((node) => {
+      node.inert = true;
+    });
     const frame = requestAnimationFrame(() => {
       const panel = document.querySelector(".reading-drawer,.drawer");
       (panel?.querySelector('[aria-label^="Fechar"]') || panel)?.focus({
@@ -21,7 +29,7 @@ export default function useDrawerModal(drawer, close) {
       if (!panel) return;
       const items = [
         ...panel.querySelectorAll(
-          'button:not(:disabled),input:not(:disabled),select:not(:disabled),summary,[tabindex="0"]',
+          'button:not(:disabled),input:not(:disabled),select:not(:disabled),summary,a[href],[tabindex="0"]',
         ),
       ].filter((item) => item.offsetParent !== null);
       if (!items.length) {
@@ -47,7 +55,19 @@ export default function useDrawerModal(drawer, close) {
     return () => {
       cancelAnimationFrame(frame);
       document.removeEventListener("keydown", key, true);
-      if (previous?.isConnected) previous.focus({ preventScroll: true });
+      background.forEach((node) => {
+        node.inert = false;
+      });
+      const fallback = [
+        ...document.querySelectorAll(
+          ".mobile-menu-toggle,.project-header button",
+        ),
+      ].find((node) => node.offsetParent !== null);
+      const target =
+        previous?.isConnected && previous.offsetParent !== null
+          ? previous
+          : fallback;
+      target?.focus({ preventScroll: true });
     };
   }, [drawer, close]);
 }
