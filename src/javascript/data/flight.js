@@ -1,3 +1,4 @@
+import { CRUISE_ALTITUDE } from "./sceneSettings.js";
 import { wrapCoordinate } from "./worldStream.js";
 import { FLIGHT_BOUNDS as B } from "./geography.js";
 const RECOVERY_ALTITUDE = 13;
@@ -30,7 +31,7 @@ export function stepFlight(flight, input, frameDelta, destination = null) {
     const correction = angleDifference(targetHeading, flight.heading);
     flight.speed = damp(
       flight.speed,
-      clamp(Math.hypot(dx, dz) * 0.3, 1.5, 6),
+      clamp(Math.hypot(dx, dz) * (flight.worldScale || 1) * 0.3, 1.5, 6),
       1.2,
       dt,
     );
@@ -38,7 +39,7 @@ export function stepFlight(flight, input, frameDelta, destination = null) {
     flight.bank = damp(flight.bank, clamp(correction * 0.8, -0.6, 0.6), 3, dt);
     flight.pitch = damp(
       flight.pitch,
-      clamp((6 - flight.y) * 0.08, -0.25, 0.25),
+      clamp((CRUISE_ALTITUDE - flight.y) * 0.08, -0.25, 0.25),
       3,
       dt,
     );
@@ -47,7 +48,8 @@ export function stepFlight(flight, input, frameDelta, destination = null) {
     flight.heading += (Math.sin(flight.bank) * 0.9 - rudder * 0.45) * dt;
     flight.pitch = damp(flight.pitch, pitchInput * 0.45, 3, dt);
   }
-  const horizontalSpeed = flight.speed * Math.cos(flight.pitch);
+  const horizontalSpeed =
+    (flight.speed * Math.cos(flight.pitch)) / (flight.worldScale || 1);
   flight.x += -Math.sin(flight.heading) * horizontalSpeed * dt;
   flight.z += -Math.cos(flight.heading) * horizontalSpeed * dt;
   flight.y = clamp(
@@ -123,7 +125,7 @@ function recoverFromCeiling(f, dt) {
       f.maneuver = null;
     }
   }
-  const horizontal = f.speed * Math.cos(f.pitch) * dt;
+  const horizontal = (f.speed * Math.cos(f.pitch) * dt) / (f.worldScale || 1);
   f.x = wrapCoordinate(f.x - Math.sin(f.heading) * horizontal, B.minX, B.maxX);
   f.z = wrapCoordinate(f.z - Math.cos(f.heading) * horizontal, B.minZ, B.maxZ);
 }

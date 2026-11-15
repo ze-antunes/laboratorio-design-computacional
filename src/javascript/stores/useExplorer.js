@@ -1,6 +1,11 @@
 import { create } from "zustand";
 import battleUrl from "../../WW2_LocationData_Clean - GeoBattleData_YZ.csv?url";
 import { parseBattles, filterBattles } from "../data/battles";
+import {
+  loadSceneSettings,
+  sceneSettings,
+  DEFAULT_SCENE_SETTINGS,
+} from "../data/sceneSettings";
 let loading;
 export const useExplorer = create((set, get) => ({
   battles: [],
@@ -24,6 +29,31 @@ export const useExplorer = create((set, get) => ({
   paused: true,
   navigationMode: "free",
   viewDistance: 84,
+  ...loadSceneSettings(),
+  soundEnabled: false,
+  soundVolume: 0.35,
+  soundError: "",
+  setSoundEnabled: (soundEnabled) => set({ soundEnabled, soundError: "" }),
+  setSoundError: (soundError) => set({ soundEnabled: false, soundError }),
+  setSoundVolume: (soundVolume) =>
+    set({ soundVolume: Math.max(0, Math.min(1, Number(soundVolume))) }),
+  setSceneSettings: (changes) =>
+    set((state) => {
+      const next = sceneSettings({ ...state, ...changes });
+      try {
+        globalThis.localStorage?.setItem(
+          "ldc-scene-settings-v1",
+          JSON.stringify(next),
+        );
+      } catch {}
+      return {
+        ...next,
+        paused: true,
+        pressed: {},
+        touchAxes: { roll: 0, pitch: 0 },
+      };
+    }),
+  resetSceneSettings: () => get().setSceneSettings(DEFAULT_SCENE_SETTINGS),
   eventProgress: 0,
   readingSeconds: 18,
   expandedClusterId: null,
@@ -32,7 +62,17 @@ export const useExplorer = create((set, get) => ({
   nearbyId: null,
   destinationId: null,
   travelVersion: 0,
-  telemetry: { x: 0, y: 6, z: 0, heading: 0, speed: 4.0 },
+  telemetry: {
+    x: 0,
+    y: 3.5,
+    z: 0,
+    heading: 0,
+    speed: 4.0,
+    pitch: 0,
+    bank: 0,
+    turnRate: 0,
+    climbRate: 0,
+  },
   load: () => {
     if (!loading)
       loading = fetch(battleUrl)

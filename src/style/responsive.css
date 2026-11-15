@@ -1106,3 +1106,50 @@ canvas {
     padding-right: max(16px, env(safe-area-inset-right));
   }
 }
+.scene-settings,
+.engine-settings {
+  border-top: 1px solid #444;
+  margin-top: 24px;
+  padding-top: 2px;
+}
+.scene-settings label,
+.engine-settings label {
+  position: relative;
+}
+.scene-settings output,
+.engine-settings output {
+  float: right;
+  color: #eee;
+  font: 12px monospace;
+}
+.scene-settings input[type="range"],
+.engine-settings input[type="range"] {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 0;
+  margin: 4px 0 0;
+  accent-color: #f00511;
+  cursor: pointer;
+}
+.sound-toggle[aria-pressed="true"] {
+  color: #fff;
+  border-color: #e11;
+  background: #6e0008;
+}
+.sound-status {
+  position: absolute;
+  top: calc(var(--header-h) + 12px);
+  right: var(--edge);
+  max-width: 240px;
+  padding: 10px;
+  background: #111e;
+  border-left: 2px solid #e11;
+  font-size: 12px;
+  z-index: 15;
+}
+@media (max-width: 700px), (max-height: 550px) {
+  .header-functions nav .sound-toggle {
+    grid-column: 1 / -1;
+  }
+}

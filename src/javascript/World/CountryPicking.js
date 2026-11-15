@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Raycaster, Vector2 } from "three";
+import { isCloudHitVisible } from "../data/sceneSettings";
 import { visibleLandHit } from "../data/mapPicking";
 import { world } from "../data/world";
 import { countryContainsMapPoint, FLIGHT_BOUNDS as B } from "../data/geography";
@@ -25,7 +26,8 @@ export default function CountryPicking() {
     ray.setFromCamera(pointer.current, camera);
     const hit = visibleLandHit(ray, surfaces);
     if (!hit) return null;
-    let { x, z } = hit.point;
+    let x = hit.point.x / state.worldScale,
+      z = hit.point.z / state.worldScale;
     if (state.cameraMode === "flight") {
       if (
         Math.hypot(x - state.telemetry.x, z - state.telemetry.z) >
@@ -105,7 +107,7 @@ export default function CountryPicking() {
       if (
         hits.some(
           (h) =>
-            h.object.name.includes("explosion") ||
+            (h.object.name.includes("explosion") && isCloudHitVisible(h)) ||
             h.object.name.includes("event-point") ||
             h.object.name === "expanded-cluster-points",
         )

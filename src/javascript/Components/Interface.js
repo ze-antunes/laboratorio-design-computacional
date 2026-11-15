@@ -9,6 +9,7 @@ import { world } from "../data/world";
 import Timeline from "./Timeline";
 import Compass from "./Compass";
 import TouchControls from "./TouchControls";
+import useAircraftAudio from "../hooks/useAircraftAudio";
 import useResponsiveLayout from "../hooks/useResponsiveLayout";
 import useDrawerModal from "../hooks/useDrawerModal";
 import ReadingDrawer from "./ReadingDrawer";
@@ -92,6 +93,7 @@ function Locator({ clusters, telemetry, nearbyId, selected, compared }) {
 }
 export default function Interface() {
   const state = useExplorer();
+  const toggleSound = useAircraftAudio();
   const layout = useResponsiveLayout();
   const [menuOpen, setMenuOpen] = useState(false),
     [dockExpanded, setDockExpanded] = useState(false);
@@ -295,6 +297,18 @@ export default function Interface() {
             >
               Sobre / ajuda
             </button>
+            <button
+              className="sound-toggle"
+              aria-pressed={state.soundEnabled}
+              onClick={toggleSound}
+              aria-label={
+                state.soundEnabled
+                  ? "Desativar som do motor"
+                  : "Ativar som do motor"
+              }
+            >
+              {state.soundEnabled ? "Som ligado" : "Ativar som"}
+            </button>
           </nav>
           <div className="flight-modes" role="group" aria-label="Modo de voo">
             <button
@@ -369,6 +383,11 @@ export default function Interface() {
           aria-label="Fechar menu de exploração"
           onClick={() => setMenuOpen(false)}
         />
+      )}
+      {state.soundError && !drawer && (
+        <p className="sound-status" role="alert">
+          {state.soundError}
+        </p>
       )}
       <Compass />
       <TouchControls suspended={dockExpanded || menuOpen} />
@@ -492,9 +511,15 @@ export default function Interface() {
                       state.setViewDistance(event.target.value)
                     }
                   >
-                    <option value={48}>Curta · 48 unidades</option>
-                    <option value={84}>Média · 84 unidades</option>
-                    <option value={120}>Longa · 120 unidades</option>
+                    <option value={48}>
+                      Curta · {Math.round(48 * state.worldScale)} unidades
+                    </option>
+                    <option value={84}>
+                      Média · {Math.round(84 * state.worldScale)} unidades
+                    </option>
+                    <option value={120}>
+                      Longa · {Math.round(120 * state.worldScale)} unidades
+                    </option>
                   </select>
                 </label>
                 <p>
@@ -502,6 +527,86 @@ export default function Interface() {
                   eventos”, o avião visita os registos por ordem e faz pausas
                   para leitura.
                 </p>
+                <section
+                  className="scene-settings"
+                  aria-label="Dimensões do cenário"
+                >
+                  <h3>Dimensões do cenário</h3>
+                  <p>
+                    Amplia o mapa sem aumentar o avião nem a velocidade. As
+                    coordenadas dos eventos mantêm-se alinhadas com os países.
+                  </p>
+                  <label htmlFor="world-scale">
+                    Escala do mapa{" "}
+                    <output>{Math.round(state.worldScale * 100)}%</output>
+                    <input
+                      id="world-scale"
+                      type="range"
+                      min="1"
+                      max="4"
+                      step="0.25"
+                      value={state.worldScale}
+                      onChange={(e) =>
+                        state.setSceneSettings({ worldScale: e.target.value })
+                      }
+                    />
+                  </label>
+                  <label htmlFor="cloud-size">
+                    Tamanho das nuvens{" "}
+                    <output>{state.cloudSize.toFixed(1)}×</output>
+                    <input
+                      id="cloud-size"
+                      type="range"
+                      min="1.2"
+                      max="5"
+                      step="0.1"
+                      value={state.cloudSize}
+                      onChange={(e) =>
+                        state.setSceneSettings({ cloudSize: e.target.value })
+                      }
+                    />
+                  </label>
+                  <p>
+                    As nuvens ficam numa faixa baixa: podes passar por baixo ou
+                    subir e sobrevoá-las. Quando uma nuvem interfere com a
+                    câmara, dissipa-se temporariamente para manter o avião
+                    visível. As dimensões ficam guardadas neste navegador.
+                  </p>
+                  <button onClick={state.resetSceneSettings}>
+                    Repor dimensões sugeridas
+                  </button>
+                </section>
+                <section className="engine-settings" aria-label="Som do avião">
+                  <h3>Som do avião</h3>
+                  <button
+                    aria-pressed={state.soundEnabled}
+                    onClick={toggleSound}
+                  >
+                    {state.soundEnabled
+                      ? "Desligar motor sonoro"
+                      : "Ativar motor sonoro"}
+                  </button>
+                  <label htmlFor="engine-volume">
+                    Volume do motor{" "}
+                    <output>{Math.round(state.soundVolume * 100)}%</output>
+                    <input
+                      id="engine-volume"
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={state.soundVolume}
+                      onChange={(e) => state.setSoundVolume(e.target.value)}
+                    />
+                  </label>
+                  <p>
+                    Cada avião tem um timbre próprio. O motor e o vento
+                    respondem à velocidade, às curvas, às subidas e às descidas.
+                    Retoma o voo para ouvir; o som fica em silêncio nas pausas,
+                    durante a leitura e ao sair desta página.
+                  </p>
+                  {state.soundError && <p role="alert">{state.soundError}</p>}
+                </section>
                 <h3>Controlos de voo</h3>
                 <dl className="control-guide">
                   <div>

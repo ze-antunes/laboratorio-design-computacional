@@ -10,7 +10,12 @@ import { clusterBattles, nearbyCluster } from "../data/clusters";
 import { nearestWorldPosition, cameraRebase } from "../data/worldStream";
 import SmokeTrail from "./SmokeTrail";
 import { preparePropellers, spinPropellers } from "../data/propellers";
-import { stepFlight } from "../data/flight";
+import {
+  chasePose,
+  initialApproach,
+  CRUISE_ALTITUDE,
+} from "../data/sceneSettings";
+import { stepFlight, angleDifference } from "../data/flight";
 
 class ModelBoundary extends Component {
   state = { failed: false };
@@ -64,6 +69,7 @@ export default function Player() {
   const [, getKeys] = useKeyboardControls();
   const aircraftId = useExplorer((s) => s.aircraft);
   const reset = useExplorer((s) => s.flightReset);
+  const worldScale = useExplorer((s) => s.worldScale);
   const cameraMode = useExplorer((s) => s.cameraMode);
   const battles = useExplorer((s) => s.battles);
   const year = useExplorer((s) => s.year),
@@ -75,7 +81,7 @@ export default function Player() {
   );
   const flight = useRef({
     x: 0,
-    y: 6,
+    y: CRUISE_ALTITUDE,
     z: 0,
     heading: 0,
     pitch: 0,
@@ -95,7 +101,7 @@ export default function Player() {
     dwell = useRef(0);
   useEffect(() => {
     cameraReady.current = false;
-  }, [cameraMode]);
+  }, [cameraMode, worldScale]);
   const input = useMemo(() => ({}), []);
   const aircraft = AIRCRAFT.find((a) => a.id === aircraftId) || AIRCRAFT[0];
   useEffect(() => {
@@ -109,11 +115,18 @@ export default function Player() {
       : null;
     const x = initialCluster?.x ?? eventX,
       z = initialCluster?.z ?? eventZ;
+    const approach = initialCluster
+      ? initialApproach(
+          initialCluster,
+          clusters,
+          useExplorer.getState().worldScale,
+        )
+      : null;
     Object.assign(flight.current, {
-      x,
-      y: 6,
-      z: z + (initialCluster ? 1 : 5),
-      heading: 0,
+      x: approach?.x ?? x,
+      y: CRUISE_ALTITUDE,
+      z: approach?.z ?? z + 5 / useExplorer.getState().worldScale,
+      heading: approach?.heading ?? 0,
       pitch: 0,
       bank: 0,
       speed: 4.0,
@@ -129,6 +142,7 @@ export default function Player() {
     const dt = Math.min(frameDelta, 0.05);
     const current = useExplorer.getState();
     const f = flight.current;
+    f.worldScale = current.worldScale;
     const typing = document.activeElement?.matches("input, select, textarea");
     const keys = typing || current.drawer ? {} : getKeys();
     for (const key of [
@@ -180,7 +194,7 @@ export default function Player() {
     if (
       target &&
       arrivedVersion.current !== current.travelVersion &&
-      Math.hypot(f.x - target[0], f.z - target[2]) < 3.5
+      Math.hypot(f.x - target[0], f.z - target[2]) * current.worldScale < 3.5
     ) {
       current.arrived();
       arrivedVersion.current = current.travelVersion;
@@ -200,18 +214,24 @@ export default function Player() {
         current.setEventProgress(progress);
       if (dwell.current >= current.readingSeconds) current.advanceTour();
     }
-    const previous = { x: f.x, z: f.z };
+    const previous = { x: f.x, z: f.z, y: f.y, heading: f.heading };
     stepFlight(f, input, dt, target);
+    f.turnRate = dt > 0 ? angleDifference(f.heading, previous.heading) / dt : 0;
+    f.climbRate = dt > 0 ? (f.y - previous.y) / dt : 0;
     const [rebaseX, rebaseZ] = cameraRebase(previous, f);
     if (rebaseX || rebaseZ) {
-      state.camera.position.x += rebaseX;
-      state.camera.position.z += rebaseZ;
+      state.camera.position.x += rebaseX * current.worldScale;
+      state.camera.position.z += rebaseZ * current.worldScale;
       current.updateTelemetry({
         x: f.x,
         y: f.y,
         z: f.z,
         heading: f.heading,
         speed: f.speed,
+        pitch: f.pitch,
+        bank: f.bank,
+        turnRate: f.turnRate,
+        climbRate: f.climbRate,
       });
     }
     selectionAge.current += dt;
@@ -219,20 +239,21 @@ export default function Player() {
       lastSelected.current = current.selectedId;
       selectionAge.current = 0;
     }
-    plane.current.position.set(f.x, f.y, f.z);
+    plane.current.position.set(
+      f.x * current.worldScale,
+      f.y,
+      f.z * current.worldScale,
+    );
     plane.current.rotation.set(f.pitch, f.heading, f.bank, "YXZ");
+    plane.current.userData.flightVelocity = [
+      -Math.sin(f.heading) * f.speed * Math.cos(f.pitch),
+      f.climbRate,
+      -Math.cos(f.heading) * f.speed * Math.cos(f.pitch),
+    ];
     if (current.cameraMode === "flight") {
-      const chaseHeading = f.cameraHeading ?? f.heading;
-      cameraPosition.set(
-        f.x + Math.sin(chaseHeading) * 9,
-        f.y + 6.0,
-        f.z + Math.cos(chaseHeading) * 9,
-      );
-      cameraTarget.set(
-        f.x - Math.sin(chaseHeading) * 3,
-        f.y - 1.3,
-        f.z - Math.cos(chaseHeading) * 3,
-      );
+      const pose = chasePose(f, current.worldScale);
+      cameraPosition.fromArray(pose.position);
+      cameraTarget.fromArray(pose.target);
       if (!cameraReady.current) {
         state.camera.position.copy(cameraPosition);
         cameraReady.current = true;
@@ -277,9 +298,13 @@ export default function Player() {
         z: f.z,
         heading: f.heading,
         speed: f.speed,
+        pitch: f.pitch,
+        bank: f.bank,
+        turnRate: f.turnRate,
+        climbRate: f.climbRate,
       });
     }
-  });
+  }, -1);
   return (
     <>
       <group ref={plane} name="player-aircraft">

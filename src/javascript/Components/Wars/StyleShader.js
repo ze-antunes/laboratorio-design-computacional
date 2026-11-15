@@ -2,6 +2,7 @@ import { Color, Vector3 } from "three";
 
 export const StyleShader = {
   uniforms: {
+    cloudOpacity: { value: 1 },
     colorMap: {
       value: [
         new Color("#427062"),
@@ -24,16 +25,31 @@ export const StyleShader = {
 
         varying vec3 vNormal;
         varying vec3 vPosition;
+        varying float vCloudVisibility;
         #include <fog_pars_vertex>
 
+        #ifdef USE_INSTANCING
+          attribute float cloudVisibility;
+        #else
+          uniform float cloudOpacity;
+        #endif
+        vec3 normalThrough(mat3 transform,vec3 source) {
+          vec3 squaredScale=vec3(dot(transform[0],transform[0]),dot(transform[1],transform[1]),dot(transform[2],transform[2]));
+          return transform*(source/max(squaredScale,vec3(0.000001)));
+        }
         void main() {
+            #ifdef USE_INSTANCING
+              vCloudVisibility=cloudVisibility;
+            #else
+              vCloudVisibility=cloudOpacity;
+            #endif
             vec4 localPosition = vec4(position, 1.0);
             vec3 localNormal = normal;
             #ifdef USE_INSTANCING
               localPosition = instanceMatrix * localPosition;
-              localNormal = mat3(instanceMatrix) * localNormal;
+              localNormal = normalThrough(mat3(instanceMatrix),localNormal);
             #endif
-            vNormal = normalize(mat3(modelMatrix) * localNormal);
+            vNormal = normalize(normalThrough(mat3(modelMatrix),localNormal));
             vPosition = (modelMatrix * localPosition).xyz;
             vec4 mvPosition=viewMatrix*vec4(vPosition,1.0);
             gl_Position=projectionMatrix*mvPosition;
@@ -54,9 +70,14 @@ export const StyleShader = {
         // variables passed from vertex to fragment shader
         varying vec3 vNormal;
         varying vec3 vPosition;
+        varying float vCloudVisibility;
         #include <fog_pars_fragment>
 
         void main() {
+            // Screen-door dissolve keeps opaque depth correct while revealing
+            // the aircraft; it never cuts a geometric hole into a cloud.
+            float threshold=fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453);
+            if(vCloudVisibility<=threshold)discard;
             vec3 worldPosition = vPosition;
             vec3 worldNormal = normalize(vNormal);
             vec3 lightVector = normalize(lightPosition - worldPosition);

@@ -12,9 +12,13 @@ import { worldCopies } from "../data/worldStream";
 import EventPoints from "../Components/Wars/EventPoints";
 function OriginalMap() {
   const { scene } = useGLTF(`${import.meta.env.BASE_URL}map-original.glb`);
-  useMemo(() => scene.traverse((object) => {
-    if (object.isMesh) object.userData.mapSurface = "land";
-  }), [scene]);
+  useMemo(
+    () =>
+      scene.traverse((object) => {
+        if (object.isMesh) object.userData.mapSurface = "land";
+      }),
+    [scene],
+  );
   return (
     <primitive
       object={scene}
@@ -33,6 +37,7 @@ export default function Map() {
     year = useExplorer((s) => s.year);
   const theatre = useExplorer((s) => s.theatre),
     query = useExplorer((s) => s.query);
+  const worldScale = useExplorer((s) => s.worldScale);
   const mode = useExplorer((s) => s.cameraMode);
   const copies = useMemo(
     () => (mode === "flight" ? worldCopies() : [[0, 0, 0]]),
@@ -48,12 +53,16 @@ export default function Map() {
     [battles, year, theatre, query],
   );
   return (
-    <>
+    <group name="scaled-event-world" scale={[worldScale, 1, worldScale]}>
       {mode === "flight" ? (
         <StreamedLand />
       ) : (
         <>
-          <mesh userData={{ mapSurface: "water" }} rotation={[-Math.PI / 2, 0, 0]} position-y={-0.2}>
+          <mesh
+            userData={{ mapSurface: "water" }}
+            rotation={[-Math.PI / 2, 0, 0]}
+            position-y={-0.2}
+          >
             <planeGeometry args={[1080, 504]} />
             <meshBasicMaterial color="#1c1c1c" />
           </mesh>
@@ -73,6 +82,6 @@ export default function Map() {
       <Suspense fallback={null}>
         <Wars clusters={clusters} />
       </Suspense>
-    </>
+    </group>
   );
 }
